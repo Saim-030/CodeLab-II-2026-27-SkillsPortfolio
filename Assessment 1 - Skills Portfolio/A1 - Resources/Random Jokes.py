@@ -9,13 +9,13 @@ BASE_DIR = Path(__file__).resolve().parent
 
 # Each line in this file should look like:  Question? Answer
 JOKES_FILE = Path(
-    r"C:/Users/dell/OneDrive/Documents/Code lab 2 Assessment/exercise 2/randomJokes.txt"
+    r"C:\Users\dell\OneDrive\Documents\Vending-Machine\CodeLab-II-2026-27-SkillsPortfolio\Assessment 1 - Skills Portfolio\A1 - Resources\randomJokes.txt"
 )
 
 # ICON
 # This picture is shown in the top-left corner of the window
 ICON_FILE = Path(
-    r"C:/Users/dell/OneDrive/Documents/Code lab 2 Assessment/exercise 2/Logo 2.ico"
+    r"C:\Users\dell\OneDrive\Documents\Vending-Machine\CodeLab-II-2026-27-SkillsPortfolio\Assessment 1 - Skills Portfolio\A1 - Resources\Logo 2.ico"
 )
 
 # COLORS
