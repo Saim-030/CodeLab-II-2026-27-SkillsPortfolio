@@ -9,13 +9,13 @@ BASE_DIR = Path(__file__).resolve().parent
 
 # Each line in this file should look like:  Question? Answer
 JOKES_FILE = Path(
-    r"C:/Users/dell/OneDrive/Documents/Code lab 2 Assessment/exercise 2/randomJokes.txt"
+    r"C:\Users\dell\OneDrive\Documents\Vending-Machine\CodeLab-II-2026-27-SkillsPortfolio\Assessment 1 - Skills Portfolio\A1 - Resources\randomJokes.txt"
 )
 
 # ICON
 # This picture is shown in the top-left corner of the window
 ICON_FILE = Path(
-    r"C:/Users/dell/OneDrive/Documents/Code lab 2 Assessment/exercise 2/Logo 2.ico"
+    r"C:\Users\dell\OneDrive\Documents\Vending-Machine\CodeLab-II-2026-27-SkillsPortfolio\Assessment 1 - Skills Portfolio\A1 - Resources\Logo 2.ico"
 )
 
 # COLORS
@@ -23,7 +23,7 @@ PAGE_BG = "#FFF0F3"      # light pink window background
 HEADER_BG = "#E63946"    # red header at the top
 CARD_BG = "#FFFFFF"      # white card that holds the joke
 # The card border picks one of these colours for each new joke
-ACCENTS = ("#FFB3C1", "#FF8FA3", "#E63946", "#C77DFF", "#FFD166", "#4CC9F0")
+ACCENTS = ("#FFB3C1", "#FF8FA3", "#E63946", "#C77DFF", "#322D1F", "#4CC9F0")
 # Colours used for the falling confetti pieces
 CONFETTI_COLORS = ("#E63946", "#FF8FA3", "#9B3FB5", "#FFD166", "#06D6A0", "#4CC9F0")
 
