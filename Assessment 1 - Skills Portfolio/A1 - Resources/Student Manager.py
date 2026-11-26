@@ -1,38 +1,48 @@
 import tkinter as tk                                  # main GUI library
-from tkinter import ttk, messagebox, simpledialog  
+from tkinter import ttk, messagebox, simpledialog     # ttk = styled widgets (table), messagebox = popups, simpledialog = input popups
 import csv                                            # used to read and write CSV files
 import os                                             # used to check if a file exists
 
 # STUDENT MANAGER - MAIN SETTINGS
 # Create the main window of the program
 root = tk.Tk()
-root.title("Student Manager | Management System")
+root.title("Student Management System")
 root.geometry("1100x720")                  # starting size: width x height
 root.minsize(950, 650)                     # the window cannot be made smaller than this
-root.configure(bg="#F0F4FA")
+root.configure(bg="#F0F4FA")               # light blue-grey background colour
 
+# WINDOW ICON 
+# Build the full path to the icon file (it must be in the same folder as this program)
+ICON_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Logo 3.ico")
 
-
+# Only set the icon if the file really exists, otherwise warn the user
+if os.path.exists(ICON_FILE):
+    root.iconbitmap(ICON_FILE)
+else:
+    messagebox.showwarning("Icon Not Found", "Logo 3.ico was not found in the program folder.")
 
 # COLOURS
 # Colours are saved in variables so we can reuse them and change them easily
-BG = "#F0F4FA"
-NAVY = "#172554"
-BLUE = "#2563EB"
-PURPLE = "#7C3AED"
-WHITE = "#FFFFFF"
-DARK = "#1E293B"
-GREEN = "#16A34A"
-RED = "#DC2626"
-ORANGE = "#EA580C"
-GREY = "#64748B"
+BG = "#F0F4FA"        # page background
+NAVY = "#172554"      # header, headings and dark buttons
+BLUE = "#2563EB"      # main accent colour
+PURPLE = "#7C3AED"    # secondary accent colour
+WHITE = "#FFFFFF"     # panels and button text
+DARK = "#1E293B"      # normal text colour
+GREEN = "#16A34A"     # success / save buttons
+RED = "#DC2626"       # delete button
+ORANGE = "#EA580C"    # lowest total button
+GREY = "#64748B"      # small hint text
 
 # FILE LOCATION
+# BASE_DIR is the folder where this program is saved
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-RESOURCE_FILE = os.path.join(BASE_DIR, "resources", "studentMarks.txt")
-SAME_FOLDER_FILE = os.path.join(BASE_DIR, "studentMarks.txt")
+# Two places where the data file might be stored
+RESOURCE_FILE = os.path.join(BASE_DIR, "resources", "studentMarks.txt")   # inside a "resources" folder
+SAME_FOLDER_FILE = os.path.join(BASE_DIR, "studentMarks.txt")             # next to the program
 
+# Use the "resources" file if it exists, otherwise use the one in the same folder
 FILE_PATH = (
     RESOURCE_FILE
     if os.path.exists(RESOURCE_FILE)
@@ -40,35 +50,43 @@ FILE_PATH = (
 )
 
 # This list keeps all students in memory while the program runs.
-# Each student is a dictionary like: {"code": "S1", "name": "Ali", "marks": [50, 60, 70, 80]}
+# Each student is a dictionary like:
+# {"code": "1001", "name": "Ali", "coursework1": 15, "coursework2": 18, "coursework3": 12, "exam": 75}
 students = []
 
 # FILE HANDLING
 def loadStudents():
-    global students
-    students = []
+    # Read studentMarks.txt, check every row, and fill the students list
+    global students                        # we are changing the main list, not making a new local one
+    students = []                          # start with an empty list every time
 
+    # Stop early if the data file is missing
     if not os.path.exists(FILE_PATH):
         messagebox.showerror("Error", "studentMarks.txt could not be found.")
         return
 
     try:
+        # Open the file and read all rows as lists of text values
         with open(FILE_PATH, "r", newline="", encoding="utf-8") as file:
             rows = list(csv.reader(file))
 
+        # An empty file is not allowed
         if not rows:
             raise ValueError("The file is empty.")
 
+        # The first row must be a single number: how many student records the file should have
         if not rows[0] or not rows[0][0].strip().isdigit():
             raise ValueError("The first row must contain the number of student records.")
         expected = int(rows[0][0])
 
+        # Go through every row after the first one (n = the real line number in the file)
         for n, row in enumerate(rows[1:], start=2):
-            if not row:
+            if not row:                    # skip blank lines
                 continue
-            if len(row) != 6:
+            if len(row) != 6:              # code, name, 3 coursework marks and exam = 6 values
                 raise ValueError(f"Row {n} must contain 6 values.")
 
+            # Turn the row into a student dictionary (int() will fail if a mark is not a number)
             s = {
                 "code": row[0].strip(),
                 "name": row[1].strip(),
@@ -78,6 +96,7 @@ def loadStudents():
                 "exam": int(row[5])
             }
 
+            # Validate the data before accepting this student
             if not s["code"].isdigit() or not 1000 <= int(s["code"]) <= 9999:
                 raise ValueError(f"Invalid student code on row {n}.")
             if not s["name"]:
@@ -89,26 +108,31 @@ def loadStudents():
             if any(x["code"] == s["code"] for x in students):
                 raise ValueError(f"Duplicate student code: {s['code']}.")
 
+            # Everything is valid, so add the student to the list
             students.append(s)
 
+        # Warn if the number at the top of the file does not match the rows loaded
         if expected != len(students):
             messagebox.showwarning("Warning", f"Expected {expected} records, loaded {len(students)}.")
 
     except (ValueError, IndexError, OSError) as e:
+        # Any problem in the file: clear the list and show the error message
         students = []
         messagebox.showerror("File Error", str(e))
 
 def save_students():
     # Save all student records in the same CSV format used by loadStudents().
     try:
+        # Make sure the folder exists before writing the file
         folder = os.path.dirname(FILE_PATH)
         if folder:
             os.makedirs(folder, exist_ok=True)
 
         with open(FILE_PATH, "w", newline="", encoding="utf-8") as file:
             writer = csv.writer(file)
-            writer.writerow([len(students)])
+            writer.writerow([len(students)])       # first row = number of students
 
+            # Write one row for each student
             for student in students:
                 writer.writerow([
                     student["code"],
@@ -119,20 +143,22 @@ def save_students():
                     student["exam"]
                 ])
 
-        return True
+        return True                                # saving worked
 
     except (OSError, KeyError) as e:
         messagebox.showerror("Error", f"Could not save student records:\n{e}")
-        return False
+        return False                               # saving failed
 
 def refresh_table(data=None):
     # Clear the table before displaying the selected records.
     for item in tree.get_children():
         tree.delete(item)
 
+    # If no list is given, show all students; otherwise show only the given list
     records = students if data is None else data
 
     for student in records:
+        # Total = all three coursework marks + the exam mark
         total = (
             student["coursework1"]
             + student["coursework2"]
@@ -140,6 +166,7 @@ def refresh_table(data=None):
             + student["exam"]
         )
 
+        # Add one row at the end of the table
         tree.insert(
             "",
             "end",
@@ -154,8 +181,10 @@ def refresh_table(data=None):
             )
         )
 
+    # The counter always shows the real number of students, even when the table is filtered
     count_label.config(text=f"TOTAL STUDENTS: {len(students)}")
 
+# MENU 1 - VIEW ALL STUDENTS
 def view_all():
     # Show every student in the table
     refresh_table()
@@ -191,16 +220,19 @@ def view_individual():
         )
         return
 
+    # Show only the matching students and update the status bar
     refresh_table(results)
     status_label.config(text=f"Found {len(results)} matching record(s)")
 
 # MENU 3 - HIGHEST TOTAL
 def highest_total():
+    # Find the student with the biggest total and show only that student
     if not students:
         messagebox.showwarning("No Records", "No students available.")
         return
 
     def total_marks(student):
+        # Helper: add the three coursework marks and the exam mark
         return (
             student["coursework1"]
             + student["coursework2"]
@@ -208,6 +240,7 @@ def highest_total():
             + student["exam"]
         )
 
+    # max() uses total_marks to compare students and returns the best one
     highest = max(students, key=total_marks)
     refresh_table([highest])
 
@@ -218,12 +251,15 @@ def highest_total():
         f'Total Marks: {total_marks(highest)}'
     )
 
+# MENU 4 - LOWEST TOTAL
 def lowest_total():
+    # Find the student with the smallest total and show only that student
     if not students:
         messagebox.showwarning("No Records", "No students available.")
         return
 
     def total_marks(student):
+        # Helper: add the three coursework marks and the exam mark
         return (
             student["coursework1"]
             + student["coursework2"]
@@ -231,6 +267,7 @@ def lowest_total():
             + student["exam"]
         )
 
+    # min() works like max(), but returns the student with the lowest total
     lowest = min(students, key=total_marks)
     refresh_table([lowest])
 
@@ -241,6 +278,7 @@ def lowest_total():
         f'Total Marks: {total_marks(lowest)}'
     )
 
+# MENU 5 - SORT RECORDS
 def sort_students():
     # Open a small window where the user chooses A-Z or Z-A
     if not students:
@@ -252,8 +290,9 @@ def sort_students():
     sort_window.title("Sort Student Records")
     sort_window.geometry("380x260")
     sort_window.configure(bg=BG)
-    sort_window.resizable(False, False)
+    sort_window.resizable(False, False)    # the user cannot resize this small window
 
+    # Title of the small window
     tk.Label(
         sort_window,
         text="SORT STUDENT RECORDS",
@@ -262,6 +301,7 @@ def sort_students():
         fg=NAVY
     ).pack(pady=25)
 
+    # Instruction text
     tk.Label(
         sort_window,
         text="Choose sorting order:",
@@ -296,7 +336,7 @@ def sort_students():
         font=("Arial", 11, "bold"),
         width=27,
         pady=10,
-        command=lambda: apply_sort(False)
+        command=lambda: apply_sort(False)      # lambda lets us pass a value to the function
     ).pack(pady=7)
 
     # Button for Z to A
@@ -314,12 +354,16 @@ def sort_students():
 # STUDENT FORM - ADD AND UPDATE
 def student_form(title, existing=None, callback=None):
     # Shared form for adding and updating student records.
+    # title    = text shown at the top of the window
+    # existing = old student details (only used when updating)
+    # callback = function to run with the new details when Save is clicked
     window = tk.Toplevel(root)
     window.title(title)
     window.geometry("440x560")
     window.configure(bg=WHITE)
     window.resizable(False, False)
 
+    # Dark blue title bar at the top of the form
     tk.Label(
         window,
         text=title.upper(),
@@ -329,10 +373,13 @@ def student_form(title, existing=None, callback=None):
         pady=18
     ).pack(fill="x")
 
+    # White area that holds all the input boxes
     form = tk.Frame(window, bg=WHITE, padx=35, pady=20)
     form.pack(fill="both", expand=True)
 
-    entries = {}
+    entries = {}                           # stores each input box so we can read it later
+
+    # Each field: (text shown to the user, key used in the student dictionary)
     fields = [
         ("Student Code", "code"),
         ("Student Name", "name"),
@@ -342,8 +389,10 @@ def student_form(title, existing=None, callback=None):
         ("Exam (0-100)", "exam")
     ]
 
+    # When adding, there are no old values, so use an empty dictionary
     values = existing if existing else {}
 
+    # Create a label and an input box for every field
     for label_text, key in fields:
         tk.Label(
             form,
@@ -356,15 +405,18 @@ def student_form(title, existing=None, callback=None):
         entry = tk.Entry(form, font=("Arial", 11), relief="solid", bd=1)
         entry.pack(fill="x", ipady=6)
 
+        # When updating, fill the box with the old value
         if key in values:
             entry.insert(0, str(values[key]))
 
         entries[key] = entry
 
     def submit():
+        # Runs when the user clicks the Save button: check the input, then pass it to the callback
         code_value = entries["code"].get().strip()
         name = entries["name"].get().strip()
 
+        # Code and name cannot be empty
         if not code_value or not name:
             messagebox.showwarning(
                 "Missing Information",
@@ -373,6 +425,7 @@ def student_form(title, existing=None, callback=None):
             )
             return
 
+        # Code must be a 4-digit number (1000 - 9999)
         if not code_value.isdigit() or not 1000 <= int(code_value) <= 9999:
             messagebox.showerror(
                 "Invalid Code",
@@ -382,11 +435,13 @@ def student_form(title, existing=None, callback=None):
             return
 
         try:
+            # int() raises a ValueError if the text is not a whole number
             coursework1 = int(entries["coursework1"].get())
             coursework2 = int(entries["coursework2"].get())
             coursework3 = int(entries["coursework3"].get())
             exam = int(entries["exam"].get())
 
+            # Check the allowed ranges for every mark
             coursework_marks = [coursework1, coursework2, coursework3]
             if any(mark < 0 or mark > 20 for mark in coursework_marks):
                 raise ValueError("Coursework marks must be between 0 and 20.")
@@ -395,10 +450,12 @@ def student_form(title, existing=None, callback=None):
                 raise ValueError("Exam mark must be between 0 and 100.")
 
         except ValueError as e:
+            # Show our own message if we raised it, otherwise a general one
             message = str(e) or "Please enter whole numbers only."
             messagebox.showerror("Invalid Marks", message, parent=window)
             return
 
+        # Everything is valid, so build the new student dictionary
         new_student = {
             "code": code_value,
             "name": name,
@@ -408,9 +465,11 @@ def student_form(title, existing=None, callback=None):
             "exam": exam
         }
 
+        # Give the student to the callback; close the form only if it returns True
         if callback and callback(new_student):
             window.destroy()
 
+    # Green save button at the bottom of the form
     tk.Button(
         form,
         text="SAVE STUDENT RECORD",
@@ -422,6 +481,7 @@ def student_form(title, existing=None, callback=None):
         command=submit
     ).pack(fill="x", pady=22)
 
+# MENU 6 - ADD STUDENT
 def add_student():
     def add_record(new_student):
         # Called by the form when the user clicks Save
@@ -500,6 +560,7 @@ def delete_student():
     )
 
     if confirm:
+        # Remove the student from the list
         students.remove(student)
 
         # Save the new list to the file
@@ -522,11 +583,13 @@ def update_student():
         "Enter student name or student code:"
     )
 
+    # User pressed Cancel or typed nothing
     if not search:
         return
 
     search = search.strip().lower()
 
+    # Find students whose code or name matches
     matches = [
         s for s in students
         if search == s["code"].lower()
@@ -540,6 +603,7 @@ def update_student():
         )
         return
 
+    # Only one student can be updated at a time
     if len(matches) > 1:
         messagebox.showwarning(
             "Multiple Matches",
@@ -571,6 +635,7 @@ def update_student():
         # Replace the old details with the new ones
         old_student.update(new_student)
 
+        # Save to the file; if it works, update the screen
         if save_students():
             refresh_table()
             status_label.config(text="Student record updated!")
@@ -652,6 +717,7 @@ menu = tk.Frame(content, bg=WHITE, width=245)
 menu.pack(side="left", fill="y", padx=(0, 18))
 menu.pack_propagate(False)                 # keep the panel at exactly 245 pixels wide
 
+# Title of the menu panel
 tk.Label(
     menu,
     text="MAIN MENU",
@@ -672,7 +738,7 @@ def menu_button(text, color, command):
         activeforeground=WHITE,
         font=("Arial", 10, "bold"),
         relief="flat",
-        cursor="hand2",
+        cursor="hand2",                    # mouse turns into a hand when over the button
         anchor="w",                        # put the text on the left side
         padx=15,
         pady=11,
@@ -708,6 +774,7 @@ tk.Button(
 table_frame = tk.Frame(content, bg=WHITE)
 table_frame.pack(side="right", fill="both", expand=True)
 
+# Title above the table
 tk.Label(
     table_frame,
     text="STUDENT RECORDS",
@@ -777,12 +844,13 @@ for col in columns:
 scrollbar = ttk.Scrollbar(
     table_frame,
     orient="vertical",
-    command=tree.yview
+    command=tree.yview                     # scrolling the bar moves the table up and down
 )
 
 # Connect the table and the scroll bar so they move together
 tree.configure(yscrollcommand=scrollbar.set)
 
+# Place the table and the scroll bar side by side
 tree.pack(side="left", fill="both", expand=True, padx=(12, 0), pady=5)
 scrollbar.pack(side="right", fill="y", padx=(0, 10), pady=5)
 
@@ -802,7 +870,7 @@ status_label.pack(fill="x", side="bottom")
 
 # START APPLICATION
 # Read the file, fill the table, then keep the window open
-loadStudents()
-refresh_table()
+loadStudents()                             # load the records from studentMarks.txt
+refresh_table()                            # show them in the table
 
-root.mainloop()
+root.mainloop()                            # keep the window open and wait for the user's clicks
